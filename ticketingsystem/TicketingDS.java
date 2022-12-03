@@ -7,10 +7,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 class Seat {
 	//occupied中被置为1的位表示被占用，e.g. 第1站至第2站，将第1位置1；第2站至第4站，将第2位至第3位置1
-	long occupied = 0;
+	int occupied = 0;
 
 	public boolean acquire(int departure, int arrival) {
-		long test = 0;
+		int test = 0;
 		for (int i = departure; i < arrival; i++) {
 			test = test | (1 << (i-1));
 		}
@@ -20,6 +20,26 @@ class Seat {
 			occupied = occupied | test;
 			return true;
 		}
+	}
+
+	public boolean inquire(int departure, int arrival) {
+		int test = 0;
+		for (int i = departure; i < arrival; i++) {
+			test = test | (1 << (i-1));
+		}
+		if ((occupied & test) > 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	public void release(int departure, int arrival) {
+		int test = 0;
+		for (int i = departure; i < arrival; i++) {
+			test = test | (1 << (i-1));
+		}
+		occupied = occupied ^ test;
 	}
 }
 
@@ -42,7 +62,6 @@ class Route {
 	}
 
 	public int getSeat(int departure, int arrival) {
-		int seatID = -1;
 		lock.writeLock().lock();
 		try {
 			for (int i = 0; i < coachNum; i++) {
@@ -54,7 +73,32 @@ class Route {
 		} finally {
 			lock.writeLock().unlock();
 		}
-		return seatID;
+		return -1;
+	}
+
+	public int countSeat(int departure, int arrival) {
+		int freeSeat = 0;
+		lock.readLock().lock();
+		try {
+			for (int i = 0; i < coachNum; i++) {
+				for (int j = 0; j < seatNum; j++) {
+					if (seats[i][j].inquire(departure, arrival))
+						freeSeat++;
+				}
+			}
+		} finally {
+			lock.readLock().unlock();
+		}
+		return freeSeat;
+	}
+
+	public void putSeat(int coach, int seat, int departure, int arrival) {
+		lock.writeLock().lock();
+		try {
+			seats[coach][seat].release(departure, arrival);
+		} finally {
+			lock.writeLock().unlock();
+		}
 	}
 }
 
@@ -103,21 +147,16 @@ public class TicketingDS implements TicketingSystem {
 
 	@Override
 	public int inquiry(int route, int departure, int arrival) {
-		return 0;
+		return routes[route-1].countSeat(departure, arrival);
 	}
 
 	@Override
 	public boolean refundTicket(Ticket ticket) {
-		return true;
-	}
-
-	@Override
-	public boolean buyTicketReplay(Ticket ticket){
-		return true;
-	}
-
-	@Override
-	public boolean refundTicketReplay(Ticket ticket){
+		if (!tickets.contains(ticket.tid)) {
+			return false;
+		}
+		tickets.remove(ticket.tid);
+		routes[ticket.route-1].putSeat(ticket.coach-1, ticket.seat-1, ticket.departure, ticket.arrival);
 		return true;
 	}
 }

@@ -9,5 +9,9 @@ cd TicketingSystem
 ```
 
 ## Commit logs
+
+### 20221203
+1. 实现了TicketingDS的所有方法，通过了replay的检查，但是verilin失败；正在编写Test.java。
+
 ### 20221126
 1. 实现了buyTicket方法。
