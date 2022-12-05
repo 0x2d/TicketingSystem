@@ -12,6 +12,7 @@ cd TicketingSystem
 
 ### 20221205
 1. 修改了所有错误，通过了verilin检查。
+2. 在GenerateHistory的基础上编写Test.java。
 
 ### 20221203
 1. 实现了TicketingDS的所有方法，通过了replay的检查，但是verilin失败；正在编写Test.java。
