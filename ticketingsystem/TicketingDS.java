@@ -61,19 +61,25 @@ class Route {
 		}
 	}
 
-	public int getSeat(int departure, int arrival) {
+	public Ticket getSeat(int departure, int arrival) {
 		lock.writeLock().lock();
 		try {
 			for (int i = 0; i < coachNum; i++) {
 				for (int j = 0; j < seatNum; j++) {
-					if (seats[i][j].acquire(departure, arrival))
-						return i * coachNum + j;
+					if (seats[i][j].acquire(departure, arrival)) {
+						Ticket newTicket = new Ticket();
+						newTicket.departure = departure;
+						newTicket.arrival = arrival;
+						newTicket.coach = i + 1;
+						newTicket.seat = j + 1;
+						return newTicket;
+					}
 				}
 			}
 		} finally {
 			lock.writeLock().unlock();
 		}
-		return -1;
+		return null;
 	}
 
 	public int countSeat(int departure, int arrival) {
@@ -95,7 +101,7 @@ class Route {
 	public void putSeat(int coach, int seat, int departure, int arrival) {
 		lock.writeLock().lock();
 		try {
-			seats[coach][seat].release(departure, arrival);
+			seats[coach-1][seat-1].release(departure, arrival);
 		} finally {
 			lock.writeLock().unlock();
 		}
@@ -113,11 +119,11 @@ public class TicketingDS implements TicketingSystem {
 	AtomicInteger tidCounter;
 
 	public TicketingDS(int routenum, int coachnum, int seatnum, int stationnum, int threadnum) {
-		routeNum = routenum == 0 ? 5 : routenum;
-		coachNum = coachnum == 0 ? 8 : coachnum;
-		seatNum = seatnum == 0 ? 10 : seatnum;
-		stationNum = stationnum == 0 ? 100 : stationnum;
-		threadNum = threadnum == 0 ? 16 : threadnum;
+		routeNum = routenum;
+		coachNum = coachnum;
+		seatNum = seatnum;
+		stationNum = stationnum;
+		threadNum = threadnum;
 		routes = new Route[routeNum];
 		for (int i = 0; i < routeNum; i++) {
 			routes[i] = new Route(coachNum, seatNum);
@@ -128,17 +134,12 @@ public class TicketingDS implements TicketingSystem {
 
 	@Override
 	public Ticket buyTicket(String passenger, int route, int departure, int arrival) {
-		int seatID = routes[route-1].getSeat(departure, arrival);
-		if (seatID == -1) {
+		Ticket newTicket = routes[route-1].getSeat(departure, arrival);
+		if (newTicket == null) {
 			return null;
 		} else {
-			Ticket newTicket = new Ticket();
 			newTicket.passenger = passenger;
 			newTicket.route = route;
-			newTicket.departure = departure;
-			newTicket.arrival = arrival;
-			newTicket.coach = (seatID / seatNum) + 1;
-			newTicket.seat = (seatID % seatNum) + 1;
 			newTicket.tid = tidCounter.getAndIncrement();
 			tickets.put(newTicket.tid, newTicket);
 			return newTicket;
@@ -152,11 +153,11 @@ public class TicketingDS implements TicketingSystem {
 
 	@Override
 	public boolean refundTicket(Ticket ticket) {
-		if (!tickets.contains(ticket.tid)) {
+		if (ticket == null || !tickets.containsKey(ticket.tid)) {
 			return false;
 		}
 		tickets.remove(ticket.tid);
-		routes[ticket.route-1].putSeat(ticket.coach-1, ticket.seat-1, ticket.departure, ticket.arrival);
+		routes[ticket.route-1].putSeat(ticket.coach, ticket.seat, ticket.departure, ticket.arrival);
 		return true;
 	}
 }
