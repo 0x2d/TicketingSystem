@@ -36,9 +36,8 @@ public class Test {
 	static int stationnum = 5;
 
 	static int refRatio = 10; 
-	static int buyRatio = 20; 
-	static int inqRatio = 30; 
-
+	static int buyRatio = 30; 
+	static int inqRatio = 60; 
 
 	static TicketingDS tds;
 	final static List<String> methodList = new ArrayList<String>();
@@ -160,33 +159,49 @@ public class Test {
 	}
 
   	public static void main(String[] args) throws InterruptedException {
+		threadnum = Integer.parseInt(args[0]);
 		readConfig("TrainConfig");
 		initialization();
 		Thread[] threads = new Thread[threadnum];
+		long[] methodTime = {0, 0, 0};
+		int[] methodNum = {0, 0, 0};
 		final long startTime = System.nanoTime();
 			
 		for (int i = 0; i < threadnum; i++) {
 				threads[i] = new Thread(new Runnable() {
 					public void run() {
 						for(int k = 0; k < testnum; k++){
-						int sel = rand.nextInt(totalPc);
-						int cnt = 0;
-						for(int j = 0; j < methodList.size(); j++){
-							if(sel >= cnt && sel < cnt + freqList.get(j)){
-							long preTime = System.nanoTime() - startTime;
-							boolean flag = execute(j);
-							long postTime = System.nanoTime() - startTime;
-							cnt += freqList.get(j);
+							int sel = rand.nextInt(totalPc);
+							int cnt = 0;
+							for(int j = 0; j < methodList.size(); j++){
+								if(sel >= cnt && sel < cnt + freqList.get(j)){
+									long preTime = System.nanoTime();
+									boolean flag = execute(j);
+									long postTime = System.nanoTime();
+									cnt += freqList.get(j);
+									if (flag) {
+										methodTime[j] += postTime - preTime;
+										methodNum[j]++;
+									}
+								}
 							}
 						}
-						}
-
 					}
 				});
 				threads[i].start();
 		}
+
 		for (int i = 0; i< threadnum; i++) {
 			threads[i].join();
-		}	
+		}
+
+		final long endTime = System.nanoTime();
+		double totalTime = (double)(endTime-startTime) / 1000000.0;
+		System.out.printf("ThreadNum: %d, TestNum: %d, TotalTime: %.2f ms.\n%s: %.2f op/ms, %s: %.2f op/ms, %s: %.2f op/ms.\nThroughout: %.2f op/ms.\n",
+			threadnum, testnum, totalTime, 
+			methodList.get(0), (double)methodNum[0] / (double)(methodTime[0]) * 1000000.0, 
+			methodList.get(1), (double)methodNum[1] / (double)(methodTime[1]) * 1000000.0, 
+			methodList.get(2), (double)methodNum[2] / (double)(methodTime[2]) * 1000000.0, 
+			(double)(methodNum[0]+methodNum[1]+methodNum[2]) / totalTime);
 	}
 }

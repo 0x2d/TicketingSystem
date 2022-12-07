@@ -9,11 +9,7 @@ class Seat {
 	//occupied中被置为1的位表示被占用，e.g. 第1站至第2站，将第1位置1；第2站至第4站，将第2位至第3位置1
 	int occupied = 0;
 
-	public boolean acquire(int departure, int arrival) {
-		int test = 0;
-		for (int i = departure; i < arrival; i++) {
-			test = test | (1 << (i-1));
-		}
+	public boolean acquire(int test) {
 		if ((occupied & test) > 0) {
 			return false;
 		} else {
@@ -22,11 +18,7 @@ class Seat {
 		}
 	}
 
-	public boolean inquire(int departure, int arrival) {
-		int test = 0;
-		for (int i = departure; i < arrival; i++) {
-			test = test | (1 << (i-1));
-		}
+	public boolean inquire(int test) {
 		if ((occupied & test) > 0) {
 			return false;
 		} else {
@@ -34,11 +26,7 @@ class Seat {
 		}
 	}
 
-	public void release(int departure, int arrival) {
-		int test = 0;
-		for (int i = departure; i < arrival; i++) {
-			test = test | (1 << (i-1));
-		}
+	public void release(int test) {
 		occupied = occupied ^ test;
 	}
 }
@@ -62,11 +50,12 @@ class Route {
 	}
 
 	public int getSeat(int departure, int arrival) {
+		int test = getTest(departure, arrival);
 		lock.writeLock().lock();
 		try {
 			for (int i = 0; i < coachNum; i++) {
 				for (int j = 0; j < seatNum; j++) {
-					if (seats[i][j].acquire(departure, arrival))
+					if (seats[i][j].acquire(test))
 						return i * seatNum + j;
 				}
 			}
@@ -78,11 +67,12 @@ class Route {
 
 	public int countSeat(int departure, int arrival) {
 		int freeSeat = 0;
+		int test = getTest(departure, arrival);
 		lock.readLock().lock();
 		try {
 			for (int i = 0; i < coachNum; i++) {
 				for (int j = 0; j < seatNum; j++) {
-					if (seats[i][j].inquire(departure, arrival))
+					if (seats[i][j].inquire(test))
 						freeSeat++;
 				}
 			}
@@ -93,12 +83,21 @@ class Route {
 	}
 
 	public void putSeat(int coach, int seat, int departure, int arrival) {
+		int test = getTest(departure, arrival);
 		lock.writeLock().lock();
 		try {
-			seats[coach-1][seat-1].release(departure, arrival);
+			seats[coach-1][seat-1].release(test);
 		} finally {
 			lock.writeLock().unlock();
 		}
+	}
+
+	public int getTest(int departure, int arrival){
+		int test = 0;
+		for (int i = departure; i < arrival; i++) {
+			test = test | (1 << (i-1));
+		}
+		return test;
 	}
 }
 
