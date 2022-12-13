@@ -12,6 +12,7 @@ cd TicketingSystem
 
 ### 20221213
 1. 增加了判断departure和arrival大小的代码。
+2. 修改了Test测试的评测基准。
 
 ### 20221207
 1. 完成了Test.java，初步优化了TicketingDS，目前本地64线程吞吐量可达503 op/ms，服务器64线程吞吐量可达419 op/ms。

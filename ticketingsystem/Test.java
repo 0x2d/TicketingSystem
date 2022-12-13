@@ -197,11 +197,11 @@ public class Test {
 
 		final long endTime = System.nanoTime();
 		double totalTime = (double)(endTime-startTime) / 1000000.0;
-		System.out.printf("ThreadNum: %d, TestNum: %d, TotalTime: %.2f ms.\n%s: %.2f op/ms, %s: %.2f op/ms, %s: %.2f op/ms.\nThroughout: %.2f op/ms.\n",
+		System.out.printf("ThreadNum: %d, TestNum: %d, TotalTime: %.2f ms.\n%s: %.2f ms, %s: %.2f ms, %s: %.2f ms.\nThroughout: %.2f op/ms.\n",
 			threadnum, testnum, totalTime, 
-			methodList.get(0), (double)methodNum[0] / (double)(methodTime[0]) * 1000000.0, 
-			methodList.get(1), (double)methodNum[1] / (double)(methodTime[1]) * 1000000.0, 
-			methodList.get(2), (double)methodNum[2] / (double)(methodTime[2]) * 1000000.0, 
+			methodList.get(0), (double)(methodTime[0]) / (1000000.0 * (double)methodNum[0]), 
+			methodList.get(1), (double)(methodTime[1]) / (1000000.0 * (double)methodNum[1]), 
+			methodList.get(2), (double)(methodTime[2]) / (1000000.0 * (double)methodNum[2]), 
 			(double)(methodNum[0]+methodNum[1]+methodNum[2]) / totalTime);
 	}
 }
