@@ -11,7 +11,7 @@ cd TicketingSystem
 ## Commit logs
 
 ### 20221207
-1. 完成了Test.java，初步优化了TicketingDS，目前64线程吞吐量可达503 op/ms。
+1. 完成了Test.java，初步优化了TicketingDS，目前本地64线程吞吐量可达503 op/ms，服务器64线程吞吐量可达419 op/ms。
 
 ### 20221205
 1. 修改了所有错误，通过了verilin检查。
