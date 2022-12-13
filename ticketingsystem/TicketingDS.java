@@ -94,7 +94,15 @@ class Route {
 
 	public int getTest(int departure, int arrival){
 		int test = 0;
-		for (int i = departure; i < arrival; i++) {
+		int de, ar;
+		if (arrival >= departure) {
+			de = departure;
+			ar = arrival;
+		} else {
+			de = arrival;
+			ar = departure;
+		}
+		for (int i = de; i < ar; i++) {
 			test = test | (1 << (i-1));
 		}
 		return test;
